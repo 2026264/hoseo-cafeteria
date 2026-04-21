@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>호서대 학생식당</title>
+<style>
+/* ── 기본 ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Apple SD Gothic Neo','Noto Sans KR',-apple-system,BlinkMacSystemFont,sans-serif;background:#F0F2F5;max-width:480px;margin:0 auto;min-height:100vh;overflow-x:hidden}
+
+/* ── 헤더 ── */
+.app-header{background:#fff;border-bottom:1px solid #E8F5E9;display:flex;align-items:center;gap:10px;padding:11px 16px;position:sticky;top:0;z-index:60;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.app-logo{font-size:1.55rem;line-height:1}
+.header-text h1{font-size:.95rem;font-weight:800;color:#1B5E20;letter-spacing:-.3px;line-height:1.2}
+.header-text p{font-size:.68rem;color:#888;margin-top:1px}
+.ws-status{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:.7rem;color:#888;background:#F5F5F5;border-radius:20px;padding:4px 10px;white-space:nowrap}
+.ws-dot{width:7px;height:7px;border-radius:50%;background:#FF9800;flex-shrink:0;transition:background .4s}
+.ws-dot.on{background:#4CAF50;animation:blink 1.5s infinite}
+.ws-dot.off{background:#F44336;animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── 탭 ── */
+.tab-bar{display:flex;background:#fff;border-bottom:1.5px solid #EEE;position:sticky;top:56px;z-index:59}
+.tab-btn{flex:1;padding:11px 4px 9px;border:none;background:none;font-size:.82rem;color:#AAA;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;border-bottom:3px solid transparent;font-weight:600;transition:color .18s}
+.tab-btn.active{color:#2E7D32;border-bottom-color:#2E7D32}
+.tab-icon{font-size:.95rem}
+
+/* ── 페이지 ── */
+.page{display:none;padding-bottom:36px}
+.page.active{display:block}
+
+/* ══════════════ 정보 탭 ══════════════ */
+.info-hero{background:#fff;margin:12px;border-radius:16px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.info-badge{display:inline-block;background:#2E7D32;color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px}
+.info-hero h2{font-size:1.35rem;font-weight:800;color:#111;margin-bottom:16px;line-height:1.3}
+.info-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:11px}
+.info-row:last-child{margin-bottom:0}
+.iico{font-size:1rem;width:22px;text-align:center;flex-shrink:0;margin-top:1px}
+.itxt{font-size:.86rem;color:#333;line-height:1.65}
+.itxt strong{color:#111;font-weight:700}
+.info-sep{height:1px;background:#F5F5F5;margin:13px 0}
+
+.sec-card{background:#fff;margin:0 12px 12px;border-radius:16px;padding:18px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.sec-title{font-size:.92rem;font-weight:800;color:#111;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+
+.amen-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;text-align:center}
+.amen-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.amen-ico{width:42px;height:42px;background:#F2F2F7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.amen-lbl{font-size:.62rem;color:#666}
+
+.guide-blk{background:#F8FFF8;border-left:3px solid #4CAF50;border-radius:0 8px 8px 0;padding:10px 13px;margin-bottom:9px}
+.guide-blk:last-child{margin-bottom:0}
+.guide-blk h4{font-size:.8rem;font-weight:700;color:#1B5E20;margin-bottom:4px}
+.guide-blk p{font-size:.78rem;color:#444;line-height:1.65}
+
+/* ══════════════ 좌석 탭 ══════════════ */
+.seats-top{background:#fff;border-bottom:1px solid #EEE}
+.seats-subhdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px}
+.seats-title{font-size:.92rem;font-weight:800;color:#111}
+.seats-title small{color:#999;font-size:.75rem;font-weight:400;margin-left:4px}
+.refresh-btn{width:32px;height:32px;border-radius:50%;background:#F5F5F5;border:none;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#666;transition:transform .25s}
+.refresh-btn:active{transform:rotate(180deg);background:#E8F5E9}
+
+.legend-row{display:flex;align-items:center;gap:10px;padding:6px 14px 9px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:.7rem;color:#666}
+.leg-sq{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #EEE}
+.stat-col{padding:9px 4px;text-align:center;border-right:1px solid #F0F0F0}
+.stat-col:last-child{border-right:none}
+.stat-big{font-size:1.25rem;font-weight:900;color:#2E7D32;line-height:1}
+.stat-sub{font-size:.67rem;color:#AAA}
+.stat-label{font-size:.66rem;color:#888;margin-top:2px}
+.stat-big.warn{color:#E53935}
+
+/* ── 도면 ── */
+.floor-wrap{overflow-x:auto;padding:10px;background:#F0F2F5;-webkit-overflow-scrolling:touch}
+.floor-box{display:flex;gap:7px;background:#fff;border:1.5px solid #DDD;border-radius:12px;padding:10px;min-width:660px}
+.zone{display:flex;flex-direction:column;gap:5px}
+.zone-tag{font-size:.65rem;color:#999;font-weight:700;text-align:center;letter-spacing:.3px;padding:1px 0}
+
+.tgrid{display:grid;gap:4px}
+.tgrid-2{grid-template-columns:repeat(2,1fr)}
+.tgrid-3{grid-template-columns:repeat(3,1fr)}
+
+/* 테이블 카드 */
+.tcard{border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 4px;cursor:pointer;position:relative;transition:transform .12s,box-shadow .12s;user-select:none;gap:2px;border:none;outline:none}
+.tcard:active{transform:scale(.92)}
+.tcard:hover{filter:brightness(1.05)}
+
+.zone-a .tcard{width:98px;min-height:54px}
+.zone-b .tcard{width:72px;min-height:51px}
+.zone-c .tcard{width:58px;min-height:51px}
+
+.tcard.avail{background:#66BB6A;box-shadow:0 1px 4px rgba(102,187,106,.35)}
+.tcard.used{background:#E53935;box-shadow:0 1px 4px rgba(229,57,53,.35)}
+.tcard.mine{background:#1E88E5;box-shadow:0 1px 4px rgba(30,136,229,.35)}
+.tcard.full{background:#B71C1C;box-shadow:0 1px 4px rgba(183,28,28,.3)}
+
+.tc-id{font-size:.64rem;font-weight:800;color:rgba(255,255,255,.85);line-height:1}
+.tc-label{font-size:.68rem;font-weight:600;color:#fff;line-height:1.2}
+.tc-timer{font-size:.74rem;font-weight:800;color:#fff;line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.tc-name{font-size:.6rem;color:rgba(255,255,255,.88);max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1}
+.tc-timer.urgent{color:#FFCDD2}
+
+.q-badge{position:absolute;top:-7px;right:-7px;background:#FF6F00;color:#fff;font-size:.57rem;font-weight:800;border-radius:9px;padding:2px 5px;border:1.5px solid #fff;white-space:nowrap}
+
+/* 시설 블록 */
+.fac-row{display:flex;gap:4px;margin-top:4px}
+.fac-blk{flex:1;background:#FFF8F0;border:1px solid #FFE0B2;border-radius:7px;text-align:center;padding:7px 2px;font-size:.65rem;color:#E65100;font-weight:700}
+.kitchen-blk{background:#F3E5F5;border:1px solid #E1BEE7;border-radius:7px;text-align:center;padding:24px 4px;font-size:.66rem;color:#7B1FA2;font-weight:700;margin-top:4px}
+
+/* ── 오프라인 배너 ── */
+.offline-banner{display:none;background:#FFF3E0;border-bottom:1px solid #FFE0B2;padding:7px 14px;font-size:.76rem;color:#E65100;text-align:center;font-weight:600}
+.offline-banner.show{display:block}
+
+/* ══════════════ 공지 탭 (메뉴) ══════════════ */
+.menu-hero{background:linear-gradient(140deg,#1B5E20 0%,#2E7D32 50%,#388E3C 100%);color:#fff;margin:12px;border-radius:16px;padding:18px;box-shadow:0 3px 12px rgba(27,94,32,.25)}
+.menu-date{font-size:.75rem;opacity:.75;margin-bottom:3px}
+.menu-hero-ttl{font-size:1.1rem;font-weight:800;margin-bottom:14px}
+.menu-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.menu-cat{background:rgba(255,255,255,.15);border-radius:12px;padding:12px 11px}
+.menu-cat-ico{font-size:1.4rem;margin-bottom:5px}
+.menu-cat-name{font-size:.9rem;font-weight:800;margin-bottom:5px}
+.menu-cat-items{display:flex;flex-direction:column;gap:3px}
+.mci{display:flex;align-items:center;gap:6px;font-size:.76rem;opacity:.9}
+.mci-dot{width:4px;height:4px;background:rgba(255,255,255,.6);border-radius:50%;flex-shrink:0}
+
+.menu-board-card{background:#fff;margin:0 12px 12px;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.menu-board-list{display:flex;flex-direction:column;gap:10px}
+.mb-item{border-radius:12px;overflow:hidden;border:1px solid #EEE}
+.mb-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F8FFF8}
+.mb-ico{font-size:1.4rem;flex-shrink:0}
+.mb-title{font-size:.95rem;font-weight:800;color:#1B5E20}
+.mb-sub{font-size:.73rem;color:#888;margin-top:1px}
+.mb-body{padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px}
+.mb-tag{background:#F0F0F0;border-radius:20px;padding:4px 10px;font-size:.75rem;color:#444;font-weight:600}
+
+.price-card{background:#fff;margin:0 12px 12px;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.p-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #F8F8F8}
+.p-row:last-child{border-bottom:none}
+.p-meal{font-size:.86rem;font-weight:700;color:#222}
+.p-prices{display:flex;gap:12px}
+.p-item{text-align:right}
+.p-lbl{font-size:.63rem;color:#AAA}
+.p-val{font-size:.86rem;font-weight:800;color:#2E7D32}
+.price-note{font-size:.72rem;color:#AAA;line-height:1.7;margin-top:10px;padding-top:10px;border-top:1px solid #F5F5F5}
+
+.notice-card{background:#fff;margin:0 12px 12px;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.n-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F8F8F8}
+.n-item:last-child{border-bottom:none}
+.n-badge{font-size:.63rem;font-weight:800;padding:3px 7px;border-radius:10px;white-space:nowrap;height:fit-content;flex-shrink:0}
+.nb-info{background:#E8F5E9;color:#2E7D32}
+.nb-warn{background:#FFEBEE;color:#C62828}
+.nb-event{background:#E3F2FD;color:#1565C0}
+.n-ttl{font-size:.83rem;font-weight:700;color:#111;margin-bottom:3px}
+.n-txt{font-size:.78rem;color:#555;line-height:1.55}
+.n-date{font-size:.68rem;color:#CCC;margin-top:3px}
+
+/* ══════════════ 모달 ══════════════ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:20px 18px 36px;box-shadow:0 -8px 40px rgba(0,0,0,.18);animation:slideUp .22s cubic-bezier(.4,0,.2,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-drag{width:36px;height:4px;background:#DDD;border-radius:2px;margin:0 auto 16px}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.modal-hdr h3{font-size:1rem;font-weight:800;color:#111}
+.close-btn{width:28px;height:28px;border-radius:50%;background:#F5F5F5;border:none;font-size:.9rem;cursor:pointer;color:#666;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.m-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:.78rem;font-weight:700;margin-bottom:12px}
+.mp-avail{background:#E8F5E9;color:#2E7D32}
+.mp-used{background:#FFEBEE;color:#C62828}
+.mp-full{background:#EEEEEE;color:#757575}
+.mp-mine{background:#E3F2FD;color:#1565C0}
+
+.res-list{display:flex;flex-direction:column;gap:7px;margin-bottom:13px}
+.res-card{border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid transparent}
+.rc0{background:#FFEBEE;border-color:#E53935}
+.rc1{background:#FFF8F0;border-color:#FB8C00}
+.rc2{background:#FFFDE7;border-color:#F9A825}
+.rc-name{font-weight:700;font-size:.9rem;margin-bottom:2px}
+.rc-sub{font-size:.75rem;color:#777}
+.rc-tag{font-size:.65rem;padding:3px 8px;border-radius:12px;font-weight:800;white-space:nowrap}
+.rct0{background:#FFCDD2;color:#B71C1C}
+.rct1,.rct2{background:#FFE0B2;color:#E65100}
+.rc-mine-tag{background:#BBDEFB;color:#0D47A1}
+
+.queue-info{background:#FFF8E1;border-left:3px solid #FBC02D;border-radius:0 8px 8px 0;padding:9px 12px;font-size:.77rem;color:#555;line-height:1.65;margin-bottom:12px}
+.queue-divider{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.queue-divider div{flex:1;height:1px;background:#EEE}
+.queue-divider span{font-size:.75rem;color:#AAA;font-weight:700;white-space:nowrap}
+
+.my-msg{background:#E3F2FD;border-radius:10px;padding:11px 13px;font-size:.8rem;color:#0D47A1;margin-bottom:12px;line-height:1.6}
+
+.flbl{font-size:.8rem;font-weight:700;color:#333;display:block;margin-bottom:5px}
+.finput{width:100%;padding:11px 13px;border:1.5px solid #DDD;border-radius:10px;font-size:.92rem;outline:none;margin-bottom:11px;transition:border-color .2s;-webkit-appearance:none}
+.finput:focus{border-color:#2E7D32}
+.time-row{display:flex;gap:6px;margin-bottom:13px}
+.tbtn{flex:1;padding:8px 4px;border:1.5px solid #DDD;background:#fff;border-radius:9px;cursor:pointer;font-size:.8rem;font-weight:700;color:#555;transition:all .18s}
+.tbtn.sel{background:#1B5E20;color:#fff;border-color:#1B5E20}
+.btn-row{display:flex;gap:7px}
+.btn{flex:1;padding:13px;border:none;border-radius:10px;font-size:.9rem;font-weight:800;cursor:pointer;transition:opacity .18s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-ok{background:#2E7D32;color:#fff}
+.btn-no{background:#F0F0F0;color:#333}
+.btn-leave{background:#E53935;color:#fff}
+.full-box{background:#FAFAFA;border-radius:10px;padding:14px;text-align:center;color:#AAA;font-size:.84rem;margin-bottom:13px;line-height:1.7}
+
+/* ── 토스트 ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);background:#212121;color:#fff;padding:10px 20px;border-radius:24px;font-size:.83rem;z-index:300;opacity:0;transition:opacity .22s,transform .22s;white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="app-header">
+  <span class="app-logo">🍱</span>
+  <div class="header-text">
+    <h1>호서대 학생식당</h1>
+    <p>Hoseo University Cafeteria</p>
+  </div>
+  <div class="ws-status">
+    <div class="ws-dot" id="ws-dot"></div>
+    <span id="ws-txt">연결 중</span>
+  </div>
+</header>
+
+<!-- ── 탭 ── -->
+<nav class="tab-bar">
+  <button class="tab-btn active" data-tab="info" onclick="showTab('info')">
+    <span class="tab-icon">ℹ️</span>정보
+  </button>
+  <button class="tab-btn" data-tab="seats" onclick="showTab('seats')">
+    <span class="tab-icon">🪑</span>좌석
+  </button>
+  <button class="tab-btn" data-tab="notice" onclick="showTab('notice')">
+    <span class="tab-icon">📋</span>공지
+  </button>
+</nav>
+
+<!-- ══════════════ 정보 탭 ══════════════ -->
+<div id="page-info" class="page active">
+
+  <div class="info-hero">
+    <div class="info-badge">학생식당</div>
+    <h2>호서대 학생식당</h2>
+    <div class="info-row">
+      <span class="iico">📍</span>
+      <div class="itxt">충청남도 아산시 배방읍 호서로 79번길 20<br>호서대학교 학생식당 2층</div>
+    </div>
+    <div class="info-row">
+      <span class="iico">🕐</span>
+      <div class="itxt"><strong>운영시간:</strong> 평일 10:00 ~ 17:00</div>
+    </div>
+    <div class="info-sep"></div>
+    <div class="info-row">
+      <span class="iico">⏱️</span>
+      <div class="itxt"><strong>1회 이용시간:</strong> 최대 40분 (테이블 단위 예약)</div>
+    </div>
+    <div class="info-row">
+      <span class="iico">🪑</span>
+      <div class="itxt"><strong>테이블 종류:</strong> 4인석 12개 · 2인석 18개 · 1인석 18개<br><span style="color:#AAA;font-size:.78rem">총 48테이블</span></div>
+    </div>
+    <div class="info-row">
+      <span class="iico">📋</span>
+      <div class="itxt"><strong>대기 신청:</strong> 이용 중 테이블에 최대 2팀,<br>이름 등록 후 순서 확인</div>
+    </div>
+    <div class="info-row">
+      <span class="iico">📞</span>
+      <div class="itxt"><a href="tel:041-540-5114" style="color:#2E7D32;font-weight:700;text-decoration:none">041-540-5114</a></div>
+    </div>
+  </div>
+
+  <div class="sec-card">
+    <div class="sec-title">🛎️ 편의시설</div>
+    <div class="amen-grid">
+      <div class="amen-item"><div class="amen-ico">📹</div><div class="amen-lbl">CCTV</div></div>
+      <div class="amen-item"><div class="amen-ico">🍽️</div><div class="amen-lbl">식사</div></div>
+      <div class="amen-item"><div class="amen-ico">🚗</div><div class="amen-lbl">주차</div></div>
+      <div class="amen-item"><div class="amen-ico">📶</div><div class="amen-lbl">Wi-Fi</div></div>
+      <div class="amen-item"><div class="amen-ico">🔌</div><div class="amen-lbl">콘센트</div></div>
+      <div class="amen-item"><div class="amen-ico">🚻</div><div class="amen-lbl">화장실</div></div>
+    </div>
+  </div>
+
+  <div class="sec-card">
+    <div class="sec-title">📢 이용 안내</div>
+    <div class="guide-blk">
+      <h4>■ 테이블 예약</h4>
+      <p>앱에서 원하는 테이블을 선택하고 이름과 이용 시간을 입력하면 예약 완료. 예약 후 10분 이내 미착석 시 자동 취소됩니다.</p>
+    </div>
+    <div class="guide-blk">
+      <h4>■ 대기 신청</h4>
+      <p>이용 중인 테이블 클릭 → 이름 입력 → 대기 등록. 최대 2팀까지 가능. 앞 팀 종료 시 알림과 함께 순서가 진행됩니다.</p>
+    </div>
+    <div class="guide-blk">
+      <h4>■ 실시간 현황</h4>
+      <p>모든 이용자의 예약이 실시간으로 공유됩니다. 상단 초록 점(●)이 켜지면 실시간 연동 중입니다.</p>
+    </div>
+    <div class="guide-blk">
+      <h4>■ 이용 시간</h4>
+      <p>30·35·40분 중 선택 가능. 시간 종료 후 대기 팀이 있을 경우 자동으로 다음 팀에게 자리가 넘어갑니다.</p>
+    </div>
+  </div>
+
+</div><!-- /page-info -->
+
+<!-- ══════════════ 좌석 탭 ══════════════ -->
+<div id="page-seats" class="page">
+
+  <div class="offline-banner" id="offline-banner">
+    ⚠️ 서버 미연결 — 로컬 모드로 실행 중 (다른 기기와 공유되지 않습니다)
+  </div>
+
+  <div class="seats-top">
+    <div class="seats-subhdr">
+      <div>
+        <span class="seats-title">호서대 학생식당<small id="tbl-count">(48테이블)</small></span>
+      </div>
+      <button class="refresh-btn" onclick="renderSeats()" title="새로고침">↻</button>
+    </div>
+
+    <div class="legend-row">
+      <div class="leg-item"><div class="leg-sq" style="background:#66BB6A"></div>이용 가능</div>
+      <div class="leg-item"><div class="leg-sq" style="background:#E53935"></div>이용 중</div>
+      <div class="leg-item"><div class="leg-sq" style="background:#1E88E5"></div>내 테이블</div>
+      <div class="leg-item"><div class="leg-sq" style="background:#FF6F00;border-radius:3px"></div>대기중</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-col">
+        <div class="stat-big" id="st4"><span id="st4a">12</span><span style="font-size:.7rem;color:#CCC;font-weight:400">/12</span></div>
+        <div class="stat-label">4인석 가능</div>
+      </div>
+      <div class="stat-col">
+        <div class="stat-big" id="st2"><span id="st2a">18</span><span style="font-size:.7rem;color:#CCC;font-weight:400">/18</span></div>
+        <div class="stat-label">2인석 가능</div>
+      </div>
+      <div class="stat-col">
+        <div class="stat-big" id="st1"><span id="st1a">18</span><span style="font-size:.7rem;color:#CCC;font-weight:400">/18</span></div>
+        <div class="stat-label">1인석 가능</div>
+      </div>
+      <div class="stat-col">
+        <div class="stat-big warn" id="stw">0</div>
+        <div class="stat-label">대기팀</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 도면 -->
+  <div class="floor-wrap">
+    <div class="floor-box">
+      <!-- A구역 4인석 -->
+      <div class="zone zone-a">
+        <div class="zone-tag">A 구역 · 4인석</div>
+        <div class="tgrid tgrid-2" id="grid-a"></div>
+        <div class="fac-row"><div class="fac-blk">🍽️ 배식대</div></div>
+        <div class="fac-row"><div class="fac-blk">🚪 출입구</div></div>
+      </div>
+      <!-- B구역 2인석 -->
+      <div class="zone zone-b">
+        <div class="zone-tag">B 구역 · 2인석</div>
+        <div class="tgrid tgrid-3" id="grid-b"></div>
+        <div class="kitchen-blk">🍳 주방<br>(Kitchen)</div>
+      </div>
+      <!-- C구역 1인석 -->
+      <div class="zone zone-c">
+        <div class="zone-tag">C 구역 · 1인석</div>
+        <div class="tgrid tgrid-3" id="grid-c"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-seats -->
+
+<!-- ══════════════ 공지 탭 ══════════════ -->
+<div id="page-notice" class="page">
+
+  <div class="menu-hero">
+    <div class="menu-date" id="menu-date"></div>
+    <div class="menu-hero-ttl">🍱 학생식당 메뉴</div>
+    <div class="menu-cat-grid">
+      <div class="menu-cat">
+        <div class="menu-cat-ico">🍚</div>
+        <div class="menu-cat-name">덮밥류</div>
+        <div class="menu-cat-items">
+          <div class="mci"><div class="mci-dot"></div>제육덮밥</div>
+          <div class="mci"><div class="mci-dot"></div>닭갈비덮밥</div>
+          <div class="mci"><div class="mci-dot"></div>불고기덮밥</div>
+        </div>
+      </div>
+      <div class="menu-cat">
+        <div class="menu-cat-ico">🌶️</div>
+        <div class="menu-cat-name">마라탕</div>
+        <div class="menu-cat-items">
+          <div class="mci"><div class="mci-dot"></div>마라탕 (소)</div>
+          <div class="mci"><div class="mci-dot"></div>마라탕 (대)</div>
+          <div class="mci"><div class="mci-dot"></div>마라샹궈</div>
+        </div>
+      </div>
+      <div class="menu-cat">
+        <div class="menu-cat-ico">🍖</div>
+        <div class="menu-cat-name">돈까스</div>
+        <div class="menu-cat-items">
+          <div class="mci"><div class="mci-dot"></div>일반 돈까스</div>
+          <div class="mci"><div class="mci-dot"></div>치즈 돈까스</div>
+          <div class="mci"><div class="mci-dot"></div>왕 돈까스</div>
+        </div>
+      </div>
+      <div class="menu-cat">
+        <div class="menu-cat-ico">🍜</div>
+        <div class="menu-cat-name">우동</div>
+        <div class="menu-cat-items">
+          <div class="mci"><div class="mci-dot"></div>가케우동</div>
+          <div class="mci"><div class="mci-dot"></div>유부우동</div>
+          <div class="mci"><div class="mci-dot"></div>튀김우동</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-board-card">
+    <div class="sec-title" style="margin-bottom:14px">📋 메뉴 상세</div>
+    <div class="menu-board-list">
+
+      <div class="mb-item">
+        <div class="mb-head">
+          <div class="mb-ico">🍚</div>
+          <div>
+            <div class="mb-title">덮밥류</div>
+            <div class="mb-sub">공깃밥 + 국 포함</div>
+          </div>
+        </div>
+        <div class="mb-body">
+          <span class="mb-tag">제육덮밥</span>
+          <span class="mb-tag">닭갈비덮밥</span>
+          <span class="mb-tag">불고기덮밥</span>
+          <span class="mb-tag">참치마요덮밥</span>
+          <span class="mb-tag">김치볶음밥</span>
+        </div>
+      </div>
+
+      <div class="mb-item">
+        <div class="mb-head">
+          <div class="mb-ico">🌶️</div>
+          <div>
+            <div class="mb-title">마라탕</div>
+            <div class="mb-sub">매운맛 조절 가능</div>
+          </div>
+        </div>
+        <div class="mb-body">
+          <span class="mb-tag">마라탕 (소)</span>
+          <span class="mb-tag">마라탕 (대)</span>
+          <span class="mb-tag">마라샹궈</span>
+          <span class="mb-tag">순한맛 선택 가능</span>
+        </div>
+      </div>
+
+      <div class="mb-item">
+        <div class="mb-head">
+          <div class="mb-ico">🍖</div>
+          <div>
+            <div class="mb-title">돈까스</div>
+            <div class="mb-sub">샐러드 · 공깃밥 포함</div>
+          </div>
+        </div>
+        <div class="mb-body">
+          <span class="mb-tag">일반 돈까스</span>
+          <span class="mb-tag">치즈 돈까스</span>
+          <span class="mb-tag">왕 돈까스</span>
+          <span class="mb-tag">데미글라스 소스</span>
+        </div>
+      </div>
+
+      <div class="mb-item">
+        <div class="mb-head">
+          <div class="mb-ico">🍜</div>
+          <div>
+            <div class="mb-title">우동</div>
+            <div class="mb-sub">일본식 가쓰오 육수</div>
+          </div>
+        </div>
+        <div class="mb-body">
+          <span class="mb-tag">가케우동</span>
+          <span class="mb-tag">유부우동</span>
+          <span class="mb-tag">튀김우동</span>
+          <span class="mb-tag">세트 (우동+주먹밥)</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="price-card">
+    <div class="sec-title">💳 이용 요금</div>
+    <div class="p-row">
+      <span class="p-meal">🍚 덮밥류</span>
+      <div class="p-val">6,000원~  ₩</div>
+    </div>
+    <div class="p-row">
+      <span class="p-meal">🌶️ 마라탕</span>
+      <div class="p-val">7,000원~  ₩</div>
+    </div>
+    <div class="p-row">
+      <span class="p-meal">🍖 돈까스</span>
+      <div class="p-val">8,000원~  ₩</div>
+    </div>
+    <div class="p-row">
+      <span class="p-meal">🍜 우동류</span>
+      <div class="p-val">6,000원~  ₩</div>
+    </div>
+    <div class="price-note">
+      ※ 현금 · 카드 · 모바일페이 모두 가능<br>
+      ※ 부가세 포함 금액입니다
+    </div>
+  </div>
+
+  <div class="notice-card">
+    <div class="sec-title">📌 공지사항</div>
+    <div class="n-item">
+      <div class="n-badge nb-info">안내</div>
+      <div><div class="n-ttl">5월 학생식당 운영 변경 안내</div><div class="n-txt">5월 5일(어린이날) 식당 운영이 휴무입니다.</div><div class="n-date">2026.04.18</div></div>
+    </div>
+    <div class="n-item">
+      <div class="n-badge nb-warn">중요</div>
+      <div><div class="n-ttl">식기 반납 철저 부탁드립니다</div><div class="n-txt">식사 후 반드시 배식대 옆 반납구에 식판을 반납해 주세요.</div><div class="n-date">2026.04.15</div></div>
+    </div>
+    <div class="n-item">
+      <div class="n-badge nb-event">이벤트</div>
+      <div><div class="n-ttl">4월 만족도 조사 실시</div><div class="n-txt">참여하시면 음료 쿠폰을 드립니다. 배식대 옆 QR 참고.</div><div class="n-date">2026.04.10</div></div>
+    </div>
+    <div class="n-item">
+      <div class="n-badge nb-info">안내</div>
+      <div><div class="n-ttl">알레르기 정보 안내</div><div class="n-txt">각 메뉴의 알레르기 유발 성분은 식당 입구 게시판 및 배식 담당 직원에게 문의해 주세요.</div><div class="n-date">2026.04.01</div></div>
+    </div>
+  </div>
+
+</div><!-- /page-notice -->
+
+<!-- ══════════════ 예약 모달 ══════════════ -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-hdr">
+      <h3 id="m-title">테이블</h3>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+
+    <div id="m-pill" class="m-pill mp-avail"></div>
+
+    <div class="res-list" id="m-res-list"></div>
+
+    <!-- 대기 신청 구분선 -->
+    <div class="queue-divider" id="m-qdiv" style="display:none">
+      <div></div><span>대기 예약 신청</span><div></div>
+    </div>
+    <div class="queue-info" id="m-qinfo" style="display:none"></div>
+
+    <!-- 내 테이블 안내 -->
+    <div class="my-msg" id="m-my-msg" style="display:none">
+      📌 <strong>내 테이블</strong>입니다.<br>식사를 마치셨으면 퇴석 버튼으로 자리를 반납해 주세요.
+    </div>
+
+    <!-- 예약 폼 -->
+    <div id="m-form" style="display:none">
+      <label class="flbl" id="m-name-lbl">예약자 이름</label>
+      <input class="finput" id="m-name" type="text" placeholder="이름을 입력하세요" maxlength="12" autocomplete="off">
+      <label class="flbl">이용 시간 선택</label>
+      <div class="time-row">
+        <button class="tbtn" onclick="selTime(30)">30분</button>
+        <button class="tbtn sel" onclick="selTime(35)">35분</button>
+        <button class="tbtn" onclick="selTime(40)">40분</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-no" onclick="closeModal()">닫기</button>
+        <button class="btn btn-ok" id="m-res-btn" onclick="doReserve()">예약하기</button>
+      </div>
+    </div>
+
+    <!-- 예약 마감 -->
+    <div id="m-full" style="display:none">
+      <div class="full-box">🚫 예약이 마감된 테이블입니다<br><span style="font-size:.75rem;color:#CCC">(이용 중 + 대기 2팀)</span></div>
+      <button class="btn btn-no" style="width:100%" onclick="closeModal()">닫기</button>
+    </div>
+
+    <!-- 내 테이블 버튼 -->
+    <div id="m-mine-btn" style="display:none">
+      <div class="btn-row">
+        <button class="btn btn-no" onclick="closeModal()">닫기</button>
+        <button class="btn btn-leave" id="m-leave-btn" onclick="doLeave()">퇴석하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+// ════════════════════════════════════
+//  STATE
+// ════════════════════════════════════
+const TBLS = {};
+let myTbl     = localStorage.getItem('myTbl') || null;
+let myName    = localStorage.getItem('myName') || '';
+let activeTbl = null;
+let chosenMin = 35;
+let ws        = null;
+let wsOnline  = false;
+
+function setMyTbl(id, name){
+  myTbl = id;
+  myName = name || myName;
+  if(id) { localStorage.setItem('myTbl', id); if(name) localStorage.setItem('myName', name); }
+  else   { localStorage.removeItem('myTbl'); }
+}
+
+// 서버 상태 기준으로 myTbl 유효성 검사
+function verifyMyTbl(){
+  if(!myTbl) return;
+  const tbl = TBLS[myTbl];
+  if(!tbl) { setMyTbl(null); return; }
+  // 내 이름이 큐에 없으면 이미 퇴석된 것
+  if(myName && tbl.q.length > 0 && !tbl.q.some(e => e.name === myName)) setMyTbl(null);
+  if(tbl.q.length === 0) setMyTbl(null);
+}
+
+// 테이블 초기화
+(function init(){
+  for(let i=1;  i<=12; i++) TBLS[`T${i}`]  = {id:`T${i}`,  type:4, zone:'A', q:[]};
+  for(let i=13; i<=30; i++) TBLS[`T${i}`]  = {id:`T${i}`,  type:2, zone:'B', q:[]};
+  for(let i=31; i<=48; i++) TBLS[`T${i}`]  = {id:`T${i}`,  type:1, zone:'C', q:[]};
+})();
+
+// ════════════════════════════════════
+//  QUEUE HELPERS
+// ════════════════════════════════════
+function secLeft(e){
+  if(!e.active) return e.min*60;
+  return Math.max(0, e.min*60 - Math.floor((Date.now()-e.t0)/1000));
+}
+function fmt(s){
+  return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+}
+// 로컬 모드 전용 큐 진행
+function advanceLocal(tbl){
+  while(tbl.q.length>0){
+    const f=tbl.q[0];
+    if(!f.active||secLeft(f)>0) break;
+    tbl.q.shift();
+    if(tbl.q.length>0){tbl.q[0].t0=Date.now();tbl.q[0].active=true;}
+    if(myTbl===tbl.id&&tbl.q.length===0) setMyTbl(null);
+  }
+}
+function status(tbl){
+  if(tbl.q.length===0) return 'avail';
+  if(tbl.q.length>=3)  return 'full';
+  return 'used';
+}
+
+// ════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════
+function cardHTML(tbl){
+  const isMine = tbl.id===myTbl;
+  const st = status(tbl);
+  let cls = isMine ? 'mine' : st==='avail' ? 'avail' : st==='full' ? 'full' : 'used';
+
+  const cur = tbl.q[0];
+  const isActive = cur&&cur.active;
+  const sec = isActive ? secLeft(cur) : 0;
+  const urgent = sec>0&&sec<120;
+
+  const typeLabel = ['','1인석','2인석','','4인석'][tbl.type]||`${tbl.type}인석`;
+
+  let inner;
+  if(isActive){
+    inner = `<div class="tc-id">${tbl.id}</div>`
+           +`<div class="tc-timer${urgent?' urgent':''}">${fmt(sec)}</div>`
+           +`<div class="tc-name">${cur.name}</div>`;
+  } else {
+    inner = `<div class="tc-id">${tbl.id}</div>`
+           +`<div class="tc-label">${typeLabel}</div>`;
+  }
+
+  const waiting = tbl.q.length>1 ? tbl.q.length-1 : 0;
+  const badge   = waiting>0 ? `<div class="q-badge">대기${waiting}</div>` : '';
+
+  return `<button class="tcard ${cls}" onclick="openModal('${tbl.id}')" aria-label="${tbl.id} ${typeLabel}">${inner}${badge}</button>`;
+}
+
+function renderSeats(){
+  // 로컬 모드: 직접 큐 진행
+  if(!wsOnline) Object.values(TBLS).forEach(advanceLocal);
+
+  document.getElementById('grid-a').innerHTML =
+    Array.from({length:12},(_,i)=>cardHTML(TBLS[`T${i+1}`])).join('');
+  document.getElementById('grid-b').innerHTML =
+    Array.from({length:18},(_,i)=>cardHTML(TBLS[`T${i+13}`])).join('');
+  document.getElementById('grid-c').innerHTML =
+    Array.from({length:18},(_,i)=>cardHTML(TBLS[`T${i+31}`])).join('');
+
+  updateStats();
+  if(activeTbl && document.getElementById('overlay').classList.contains('open')) updateModal();
+}
+
+function updateStats(){
+  let a4=0,a2=0,a1=0,w=0;
+  Object.values(TBLS).forEach(t=>{
+    if(status(t)==='avail'){
+      if(t.type===4)a4++;
+      else if(t.type===2)a2++;
+      else a1++;
+    }
+    w+=Math.max(0,t.q.length-1);
+  });
+  document.getElementById('st4a').textContent=a4;
+  document.getElementById('st2a').textContent=a2;
+  document.getElementById('st1a').textContent=a1;
+  document.getElementById('stw').textContent=w;
+}
+
+// ════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════
+function openModal(id){
+  activeTbl=id;
+  document.getElementById('overlay').classList.add('open');
+  updateModal();
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  activeTbl=null;
+  document.getElementById('m-name').value='';
+}
+
+function updateModal(){
+  if(!activeTbl) return;
+  const tbl=TBLS[activeTbl];
+  const st=status(tbl);
+  const typeLabel=['','1인석','2인석','','4인석'][tbl.type]||`${tbl.type}인석`;
+
+  // 내 위치를 이름으로 찾기 (0=이용중, 1=대기1, 2=대기2, -1=없음)
+  const myQueueIdx = (tbl.id===myTbl && myName)
+    ? tbl.q.findIndex(e=>e.name===myName)
+    : (tbl.id===myTbl ? 0 : -1);
+  const isMine = myQueueIdx >= 0;
+
+  document.getElementById('m-title').textContent=`${tbl.id} (${typeLabel})`;
+
+  // 상태 뱃지
+  const pill=document.getElementById('m-pill');
+  if(isMine && myQueueIdx===0){pill.textContent='📌 내 테이블';pill.className='m-pill mp-mine';}
+  else if(isMine){pill.textContent=`⏳ 대기 ${myQueueIdx}번`;pill.className='m-pill mp-used';}
+  else if(st==='avail'){pill.textContent='✅ 이용 가능';pill.className='m-pill mp-avail';}
+  else if(st==='full'){pill.textContent='🚫 예약 마감';pill.className='m-pill mp-full';}
+  else{
+    const w=tbl.q.length-1;
+    pill.textContent=w>0?`⏳ 이용 중 · 대기 ${w}팀`:'🔴 이용 중';
+    pill.className='m-pill mp-used';
+  }
+
+  // 예약 목록
+  const rl=document.getElementById('m-res-list');
+  if(tbl.q.length===0){
+    rl.innerHTML='<div style="text-align:center;color:#CCC;font-size:.78rem;padding:6px 0">예약 내역 없음</div>';
+  } else {
+    const rcls=['rc0','rc1','rc2'];
+    const rtag=['이용 중','대기 1번','대기 2번'];
+    const rtcls=['rct0','rct1','rct2'];
+    rl.innerHTML=tbl.q.map((e,i)=>{
+      const mine=(tbl.id===myTbl && myName && e.name===myName);
+      const sub=e.active
+        ?`⏱️ 남은 시간: <strong>${fmt(secLeft(e))}</strong>`
+        :`📋 예약 시간: ${e.min}분`;
+      return `<div class="res-card ${rcls[i]}">
+        <div>
+          <div class="rc-name">👤 ${e.name}${mine?' <span class="rc-mine-tag rc-tag">나</span>':''}</div>
+          <div class="rc-sub">${sub}</div>
+        </div>
+        <span class="rc-tag ${rtcls[i]}">${rtag[i]}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // 대기 안내 (내가 없는 자리에만 표시)
+  const isQueueSlot = !isMine && tbl.q.length>0 && tbl.q.length<3;
+  const qdiv=document.getElementById('m-qdiv');
+  const qinfo=document.getElementById('m-qinfo');
+  qdiv.style.display=isQueueSlot?'flex':'none';
+  if(isQueueSlot){
+    const cur=tbl.q[0];
+    const remain=cur&&cur.active?`약 ${fmt(secLeft(cur))} 남음`:'잠시 후 이용 가능';
+    qinfo.style.display='block';
+    qinfo.innerHTML=`현재 <strong>${tbl.q.length}팀</strong>이 이용 중이거나 대기 중입니다.<br>`
+      +`대기 신청 시 <strong>대기 ${tbl.q.length}번</strong>으로 등록됩니다.<br>`
+      +`⏱️ ${remain}`;
+  } else {
+    qinfo.style.display='none';
+  }
+
+  // 버튼/폼 표시
+  const canBook=tbl.q.length<3&&!isMine;
+  document.getElementById('m-form').style.display     = canBook?'block':'none';
+  document.getElementById('m-full').style.display     = (!canBook&&!isMine&&st==='full')?'block':'none';
+  document.getElementById('m-mine-btn').style.display = isMine?'block':'none';
+
+  // 내 상태에 따라 메시지·버튼 텍스트 변경
+  const myMsg=document.getElementById('m-my-msg');
+  const leaveBtn=document.getElementById('m-leave-btn');
+  if(isMine){
+    myMsg.style.display='block';
+    if(myQueueIdx===0){
+      myMsg.innerHTML='📌 <strong>내 테이블</strong>입니다.<br>식사를 마치셨으면 퇴석 버튼으로 자리를 반납해 주세요.';
+      leaveBtn.textContent='퇴석하기';
+    } else {
+      myMsg.innerHTML=`⏳ <strong>대기 ${myQueueIdx}번</strong>으로 등록되어 있습니다.<br>앞 팀이 퇴석하면 순서가 넘어옵니다.`;
+      leaveBtn.textContent='대기 취소';
+    }
+  } else {
+    myMsg.style.display='none';
+  }
+
+  const resBtn=document.getElementById('m-res-btn');
+  const nameLbl=document.getElementById('m-name-lbl');
+  if(isQueueSlot){
+    resBtn.textContent='대기 신청';
+    nameLbl.textContent='대기 예약자 이름';
+  } else {
+    resBtn.textContent='예약하기';
+    nameLbl.textContent='예약자 이름';
+  }
+}
+
+function selTime(m){
+  chosenMin=m;
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('sel',b.textContent===`${m}분`));
+}
+
+function doReserve(){
+  const name=document.getElementById('m-name').value.trim();
+  if(!name){toast('이름을 입력해주세요!');document.getElementById('m-name').focus();return;}
+
+  const tbl=TBLS[activeTbl];
+  if(tbl.q.length>=3){toast('예약이 마감된 테이블입니다.');return;}
+
+  const pos=tbl.q.length+1;
+
+  if(wsOnline && ws && ws.readyState===WebSocket.OPEN){
+    // 실시간 모드: 서버로 전송
+    ws.send(JSON.stringify({type:'reserve', tableId:activeTbl, name, min:chosenMin}));
+    if(!myTbl) setMyTbl(activeTbl, name);
+  } else {
+    // 로컬 모드: 직접 처리
+    const isFirst=tbl.q.length===0;
+    tbl.q.push({name, t0:isFirst?Date.now():0, min:chosenMin, active:isFirst});
+    if(isFirst&&!myTbl) setMyTbl(activeTbl, name);
+  }
+
+  const msg=pos===1
+    ?`✅ ${name}님 예약 완료! (${chosenMin}분 이용 가능)`
+    :`📋 ${name}님 대기 ${pos-1}번 등록 완료`;
+  toast(msg);
+  document.getElementById('m-name').value='';
+  closeModal();
+  renderSeats();
+}
+
+function doLeave(){
+  if(!myTbl) return;
+
+  if(wsOnline && ws && ws.readyState===WebSocket.OPEN){
+    ws.send(JSON.stringify({type:'leave', tableId:myTbl, name:myName}));
+  } else {
+    const tbl=TBLS[myTbl];
+    if(tbl&&tbl.q.length>0){
+      const idx=myName?tbl.q.findIndex(e=>e.name===myName):0;
+      if(idx>=0){
+        tbl.q.splice(idx,1);
+        if(idx===0&&tbl.q.length>0){tbl.q[0].t0=Date.now();tbl.q[0].active=true;}
+      }
+    }
+  }
+
+  setMyTbl(null);
+  toast('처리되었습니다. 감사합니다! 🙏');
+  closeModal();
+  renderSeats();
+}
+
+// ════════════════════════════════════
+//  WEBSOCKET
+// ════════════════════════════════════
+function setWSStatus(online){
+  wsOnline=online;
+  const dot=document.getElementById('ws-dot');
+  const txt=document.getElementById('ws-txt');
+  const banner=document.getElementById('offline-banner');
+  if(online){
+    dot.className='ws-dot on';
+    txt.textContent='실시간 연결됨';
+    banner.classList.remove('show');
+  } else {
+    dot.className='ws-dot off';
+    txt.textContent='로컬 모드';
+    banner.classList.add('show');
+  }
+}
+
+function connectWS(){
+  const proto=location.protocol==='https:'?'wss:':'ws:';
+  try{
+    ws=new WebSocket(`${proto}//${location.host}`);
+  }catch(e){ setWSStatus(false); return; }
+
+  ws.onopen=()=>setWSStatus(true);
+
+  ws.onmessage=(e)=>{
+    try{
+      const msg=JSON.parse(e.data);
+      if(msg.type==='state'){
+        Object.keys(msg.state).forEach(id=>{
+          const s=msg.state[id];
+          if(!TBLS[id]) TBLS[id]={id, type:s.type, zone:s.zone, q:s.q};
+          else TBLS[id].q=s.q;
+        });
+        verifyMyTbl();
+        renderSeats();
+      }
+      if(msg.type==='notify' && msg.tableId===myTbl){
+        toast(`🔔 ${msg.text}`);
+      }
+    }catch(_){}
+  };
+
+  ws.onclose=()=>{
+    setWSStatus(false);
+    setTimeout(connectWS, 3000);
+  };
+  ws.onerror=()=>ws.close();
+}
+
+// ════════════════════════════════════
+//  TABS
+// ════════════════════════════════════
+function showTab(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if(name==='seats')  renderSeats();
+  if(name==='notice') initMenu();
+}
+
+// ════════════════════════════════════
+//  MENU
+// ════════════════════════════════════
+const DAYS_KO=['일','월','화','수','목','금','토'];
+
+function initMenu(){
+  const now=new Date();
+  const d=DAYS_KO[now.getDay()];
+  document.getElementById('menu-date').textContent=
+    `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${d}요일)`;
+}
+
+// ════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════
+let _tt;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(_tt);
+  _tt=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+renderSeats();
+setInterval(renderSeats, 1000);
+connectWS();
+
+document.getElementById('overlay').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+</script>
+</body>
+</html>
